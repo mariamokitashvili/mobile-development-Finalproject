@@ -1,0 +1,55 @@
+import React from "react";
+import { StyleSheet, Text, TextInput, View } from "react-native";
+
+export default function InputField({
+  placeholder,
+  value,
+  onChangeText,
+  secureTextEntry,
+  error,
+}: any) {
+  return (
+    <View style={styles.wrapper}>
+      <TextInput
+        style={[styles.input, error ? styles.errorInput : null]}
+        placeholder={placeholder}
+        placeholderTextColor="#999"
+        value={value}
+        onChangeText={onChangeText}
+        secureTextEntry={secureTextEntry}
+      />
+
+      {error ? <Text style={styles.errorText}>{error}</Text> : null}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  wrapper: {
+    width: "100%",
+    marginBottom: 15,
+  },
+
+  input: {
+    width: "100%",
+    height: 55,
+    borderRadius: 30,
+    backgroundColor: "#F2F2F2",
+    paddingHorizontal: 20,
+    fontSize: 15,
+    color: "#111",
+  },
+
+  errorInput: {
+    borderWidth: 1,
+    borderColor: "red",
+  },
+
+  errorText: {
+    marginTop: 6,
+    marginLeft: 10,
+    color: "red",
+    fontSize: 13,
+    fontWeight: "500",
+  },
+});
