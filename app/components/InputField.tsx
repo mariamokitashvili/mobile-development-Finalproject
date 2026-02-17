@@ -7,6 +7,7 @@ export default function InputField({
   onChangeText,
   secureTextEntry,
   error,
+  ...rest // იჭერს keyboardType-ს და ნებისმიერ სხვა პარამეტრს
 }: any) {
   return (
     <View style={styles.wrapper}>
@@ -17,6 +18,7 @@ export default function InputField({
         value={value}
         onChangeText={onChangeText}
         secureTextEntry={secureTextEntry}
+        {...rest} // აქ "იშლება" ყველა დამატებითი პარამეტრი
       />
 
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
@@ -29,7 +31,6 @@ const styles = StyleSheet.create({
     width: "100%",
     marginBottom: 15,
   },
-
   input: {
     width: "100%",
     height: 55,
@@ -38,18 +39,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     fontSize: 15,
     color: "#111",
-  },
 
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
   errorInput: {
     borderWidth: 1,
-    borderColor: "red",
+    borderColor: "#FF3B30",
   },
-
   errorText: {
     marginTop: 6,
-    marginLeft: 10,
-    color: "red",
-    fontSize: 13,
+    marginLeft: 15,
+    color: "#FF3B30",
+    fontSize: 12,
     fontWeight: "500",
   },
 });

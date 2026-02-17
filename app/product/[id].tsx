@@ -1,251 +1,218 @@
-import React, { useEffect, useState } from "react";
+import { Ionicons } from "@expo/vector-icons";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
   Image,
+  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
-
-import { Ionicons } from "@expo/vector-icons";
-import { useLocalSearchParams, useRouter } from "expo-router";
-
-type Product = {
-  id: number;
-  title: string;
-  price: number;
-  image: string;
-  description: string;
-  category: string;
-};
+import { useCart } from "../context/CartContext";
+import { useFavorites } from "../context/FavoritesContext";
 
 export default function ProductDetails() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
-
-  const [product, setProduct] = useState<Product | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  const convertToGEL = (usd: number) => {
-    return Math.floor(usd * 2.7);
-  };
+  const { addToCart } = useCart();
+  const { toggleFavorite, isFavorite } = useFavorites();
+  const [product, setProduct] = useState<any>(null);
 
   useEffect(() => {
-    const fetchProduct = async () => {
-      try {
-        const res = await fetch(`https://fakestoreapi.com/products/${id}`);
-        const data = await res.json();
-        setProduct(data);
-      } catch (err) {
-        console.log("Product fetch error:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProduct();
+    fetch(`https://fakestoreapi.com/products/${id}`)
+      .then((res) => res.json())
+      .then((json) => setProduct(json));
   }, [id]);
 
-  if (loading) {
+  if (!product)
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#6C4AB6" />
-        <Text style={styles.loadingText}>იტვირთება...</Text>
+        <Text>Loading...</Text>
       </View>
     );
-  }
 
-  if (!product) {
-    return (
-      <View style={styles.center}>
-        <Text style={styles.errorText}>პროდუქტი ვერ მოიძებნა</Text>
-      </View>
-    );
-  }
+  const activeFav = isFavorite(product.id);
 
   return (
-    <View style={styles.container}>
-      {/* HEADER */}
-      <View style={styles.headerRow}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons name="chevron-back" size={28} color="#111" />
+    <SafeAreaView style={styles.container}>
+      {/*ზედა ზოლი*/}
+      <View style={styles.topBar}>
+        <TouchableOpacity
+          style={styles.iconCircle}
+          onPress={() => router.back()}
+        >
+          <Ionicons name="chevron-back" size={24} color="#1A237E" />
         </TouchableOpacity>
 
-        <View style={styles.headerIcons}>
-          <TouchableOpacity
-            style={styles.iconBox}
-            onPress={() => Alert.alert("გაზიარება", product.title)}
-          >
-            <Ionicons name="share-outline" size={22} color="#111" />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.iconBox}
-            onPress={() => Alert.alert("ფავორიტებში დამატება", product.title)}
-          >
-            <Ionicons name="heart-outline" size={22} color="#111" />
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity
+          style={styles.iconCircle}
+          onPress={() => {
+            toggleFavorite(product);
+            if (!activeFav) alert("Added to Favorites! ❤️");
+          }}
+        >
+          <Ionicons
+            name={activeFav ? "heart" : "heart-outline"}
+            size={24}
+            color={activeFav ? "#FF3B30" : "#1A237E"}
+          />
+        </TouchableOpacity>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* IMAGE */}
-        <Image source={{ uri: product.image }} style={styles.image} />
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scroll}
+      >
+        {/*სურათის ბლოკი*/}
+        <View style={styles.imgCard}>
+          <Image
+            source={{ uri: product.image }}
+            style={styles.img}
+            resizeMode="contain"
+          />
+        </View>
 
-        {/* DETAILS BOX */}
-        <View style={styles.detailsBox}>
+        {/*ინფორმაციის ბლოკი */}
+        <View style={styles.infoBox}>
+          <View style={styles.headerRow}>
+            <Text style={styles.category}>
+              {product.category.toUpperCase()}
+            </Text>
+            <View style={styles.rating}>
+              <Ionicons name="star" size={14} color="#C5A358" />
+              <Text style={styles.ratingText}>
+                {product.rating?.rate || "4.5"}
+              </Text>
+            </View>
+          </View>
+
           <Text style={styles.title}>{product.title}</Text>
+          <Text style={styles.desc}>{product.description}</Text>
 
-          <Text style={styles.price}>{convertToGEL(product.price)}₾</Text>
-
-          <Text style={styles.category}>Category: {product.category}</Text>
-
-          <Text style={styles.description}>{product.description}</Text>
-
-          {/* BUTTONS */}
-          <View style={styles.buttonsRow}>
-            <TouchableOpacity
-              style={styles.cartButton}
-              onPress={() => Alert.alert("კალათაში დამატება", product.title)}
-            >
-              <Ionicons name="cart-outline" size={26} color="#111" />
-            </TouchableOpacity>
+          {/*ფუტერი*/}
+          <View style={styles.footerRow}>
+            <View>
+              <Text style={styles.priceLabel}>Price</Text>
+              <Text style={styles.price}>${product.price}</Text>
+            </View>
 
             <TouchableOpacity
-              style={styles.buyButton}
-              onPress={() => Alert.alert("ყიდვა", product.title)}
+              style={styles.addBtn}
+              onPress={() => {
+                addToCart(product);
+                alert("Added to Bag! 🛍️");
+              }}
             >
-              <Text style={styles.buyText}>Buy now</Text>
+              <Text style={styles.addBtnText}>ADD TO BAG</Text>
             </TouchableOpacity>
           </View>
         </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F3F3F3",
-    paddingHorizontal: 15,
-    paddingTop: 60,
+    backgroundColor: "#FFF",
   },
-
-  headerRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 10,
-  },
-
-  headerIcons: {
-    flexDirection: "row",
-    gap: 10,
-  },
-
-  iconBox: {
-    width: 42,
-    height: 42,
-    borderRadius: 25,
-    backgroundColor: "#fff",
-    justifyContent: "center",
-    alignItems: "center",
-    elevation: 4,
-  },
-
-  image: {
-    width: "100%",
-    height: 300,
-    resizeMode: "contain",
-    marginTop: 20,
-    marginBottom: 20,
-  },
-
-  detailsBox: {
-    backgroundColor: "#fff",
-    borderRadius: 25,
-    padding: 20,
-    marginBottom: 30,
-    elevation: 4,
-  },
-
-  title: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#111",
-    marginBottom: 15,
-  },
-
-  price: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#111",
-    marginBottom: 10,
-  },
-
-  category: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#666",
-    marginBottom: 15,
-  },
-
-  description: {
-    fontSize: 15,
-    color: "#444",
-    lineHeight: 22,
-  },
-
-  buttonsRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 15,
-    marginTop: 20,
-  },
-
-  cartButton: {
-    width: 55,
-    height: 55,
-    borderRadius: 30,
-    backgroundColor: "#F0F0F0",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  buyButton: {
-    flex: 1,
-    backgroundColor: "#6C4AB6",
-    paddingVertical: 15,
-    borderRadius: 30,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  buyText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-
   center: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
   },
-
-  loadingText: {
-    marginTop: 10,
-    fontSize: 16,
+  topBar: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    backgroundColor: "#FFF",
+  },
+  iconCircle: {
+    backgroundColor: "#F5F5F5",
+    padding: 10,
+    borderRadius: 15,
+  },
+  scroll: {
+    flexGrow: 1,
+  },
+  imgCard: {
+    width: "100%",
+    height: 420,
+    backgroundColor: "#FFF",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  img: {
+    width: "80%",
+    height: "80%",
+  },
+  infoBox: {
+    padding: 30,
+    backgroundColor: "#FFF",
+    borderTopLeftRadius: 40,
+    borderTopRightRadius: 40,
+    flex: 1,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -10 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  category: {
+    color: "#C5A358",
+    fontWeight: "bold",
+    fontSize: 12,
+    letterSpacing: 2,
+  },
+  rating: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F0F0F0",
+    padding: 5,
+    borderRadius: 10,
+  },
+  ratingText: {
+    fontSize: 12,
+    fontWeight: "bold",
+    marginLeft: 4,
     color: "#333",
   },
-
-  errorText: {
-    fontSize: 16,
-    color: "red",
-    fontWeight: "bold",
+  title: {
+    fontSize: 22,
+    fontWeight: "900",
+    color: "#1A237E",
+    marginVertical: 15,
   },
+  desc: {
+    color: "#777",
+    lineHeight: 22,
+    marginBottom: 20,
+    fontSize: 14,
+  },
+  footerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: "auto",
+    paddingBottom: 10,
+    paddingTop: 20,
+  },
+  priceLabel: { color: "#AAA", fontSize: 13, marginBottom: 2 },
+  price: { fontSize: 28, fontWeight: "900", color: "#1A237E" },
+  addBtn: {
+    backgroundColor: "#1A237E",
+    paddingVertical: 16,
+    paddingHorizontal: 35,
+    borderRadius: 20,
+  },
+  addBtnText: { color: "#FFF", fontWeight: "bold", fontSize: 16 },
 });
