@@ -1,15 +1,37 @@
-Products & Authentication App
+# 🛍️ Modern E-Commerce Mobile App (React Native & Expo)
 
-This React application features product listing, product details, and user authentication, all designed to match the provided interface screenshots.
+ეს არის თანამედროვე მობილური აპლიკაცია, აგებული **React Native**-ისა და **Expo Router**-ის გამოყენებით. აპლიკაცია მოიცავს პროდუქტების დათვალიერების, კალათაში დამატების, ფავორიტების მართვისა და ავტორიზაციის სრულ ფუნქციონალს.
 
-Product Pages
+---
 
-The app includes a Products page that displays a list of items and a Product Details page that shows detailed information about each product. The design matches the screenshots provided for the project.
+## ✨ ძირითადი ფუნქციები (Features)
 
-Authentication
+- **🔐 სრული ავტორიზაცია:** ლოგინი და რეგისტრაცია `React Hook Form` და `Yup` ვალიდაციით.
+- **🛒 კალათის მართვა:** პროდუქტების დამატება, რაოდენობის შეცვლა და წაშლა (გამოყენებულია Context API).
+- **❤️ ფავორიტების სისტემა:** ნივთების „დაგულება“ და შენახვა მუდმივ მეხსიერებაში.
+- **📦 პროდუქტების კატალოგი:** მონაცემების დინამიური წამოღება `FakeStore API`-დან.
+- **💾 მუდმივი მეხსიერება:** `AsyncStorage`-ის საშუალებით მონაცემები (კალათა, ფავორიტები, პროფილი) არ იკარგება აპლიკაციის დახურვისას.
+- **📱 ადაპტიური დიზაინი:** სუფთა და თანამედროვე UI, რომელიც მორგებულია როგორც iOS, ისე Android პლატფორმაზე.
 
-The Login and Register pages share a consistent, user-friendly design. Users can easily switch between login and registration pages. The registration form includes password confirmation with real-time feedback if the passwords do not match. All forms use React Hook Form with Yup for validation.
+---
 
-Technologies Used
+## 🛠️ გამოყენებული ტექნოლოგიები (Tech Stack)
 
-This project was built using React, with form handling by React Hook Form and validation via Yup. Styling is implemented using CSS / Styled Components, and routing is managed with React Router or Next.js routing depending on the setup.
+- **Framework:** [React Native](https://reactnative.dev/) (Expo)
+- **Navigation:** [Expo Router](https://docs.expo.dev/router/introduction/) (File-based routing)
+- **State Management:** React Context API
+- **Validation:** Yup & React Hook Form
+- **Icons:** Expo Vector Icons (Ionicons)
+- **Storage:** AsyncStorage
+
+---
+
+## 📂 პროექტის სტრუქტურა (Project Structure)
+
+```text
+├── app/                  # ნავიგაციის გვერდები (Tabs, Login, Register, Details)
+├── components/           # reusable კომპონენტები (InputField, ProductCard და ა.შ.)
+├── context/              # Global State (CartContext, FavoritesContext)
+├── schemas/              # ვალიდაციის სქემები (Yup)
+└── assets/               # სურათები და ფონტები
+```

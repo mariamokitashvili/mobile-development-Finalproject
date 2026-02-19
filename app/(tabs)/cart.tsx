@@ -1,6 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import React from "react";
 import {
+  Alert,
   FlatList,
   Image,
   SafeAreaView,
@@ -12,15 +14,50 @@ import {
 import { useCart } from "../context/CartContext";
 
 export default function Cart() {
-  const { cart, addToCart, removeFromCart, deleteItem } = useCart();
+  const { cart, addToCart, removeFromCart, deleteItem, setCart } = useCart();
+  const router = useRouter();
 
   const totalPrice = cart
     .reduce((sum: number, item: any) => sum + item.price * item.quantity, 0)
     .toFixed(2);
 
+  // გადახდის ფუნქცია
+  const handleCheckout = () => {
+    Alert.alert("Confirm Payment", `Total amount is $${totalPrice}. Proceed?`, [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Pay Now",
+        onPress: () => {
+          Alert.alert("Success! 🎉", "Order placed successfully!");
+          setCart([]); // კალათის გასუფთავება
+        },
+      },
+    ]);
+  };
+
+  // Empty State  თუ კალათა ცარიელია
+  if (cart.length === 0) {
+    return (
+      <SafeAreaView style={styles.emptyContainer}>
+        <Ionicons name="bag-handle-outline" size={100} color="#DDD" />
+        <Text style={styles.emptyTitle}>Your bag is empty</Text>
+        <Text style={styles.emptySubtitle}>
+          Looks like you haven't made your choice yet.
+        </Text>
+        <TouchableOpacity
+          style={styles.shopBtn}
+          onPress={() => router.push("/(tabs)")}
+        >
+          <Text style={styles.shopBtnText}>START SHOPPING</Text>
+        </TouchableOpacity>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.header}>YOUR BAG</Text>
+
       <FlatList
         data={cart}
         keyExtractor={(item) => item.id.toString()}
@@ -69,10 +106,7 @@ export default function Cart() {
           <Text style={styles.totalLabel}>Total Amount:</Text>
           <Text style={styles.totalValue}>${totalPrice}</Text>
         </View>
-        <TouchableOpacity
-          style={styles.payBtn}
-          onPress={() => alert("Redirecting to Secure Payment...")}
-        >
+        <TouchableOpacity style={styles.payBtn} onPress={handleCheckout}>
           <Ionicons
             name="card-outline"
             size={24}
@@ -145,4 +179,32 @@ const styles = StyleSheet.create({
     fontSize: 16,
     letterSpacing: 1,
   },
+  // Empty State Styles
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#FFF",
+    padding: 20,
+  },
+  emptyTitle: {
+    fontSize: 22,
+    fontWeight: "bold",
+    color: "#1A237E",
+    marginTop: 20,
+  },
+  emptySubtitle: {
+    fontSize: 14,
+    color: "#AAA",
+    textAlign: "center",
+    marginTop: 10,
+    marginBottom: 30,
+  },
+  shopBtn: {
+    backgroundColor: "#1A237E",
+    paddingVertical: 15,
+    paddingHorizontal: 40,
+    borderRadius: 15,
+  },
+  shopBtnText: { color: "#FFF", fontWeight: "bold" },
 });

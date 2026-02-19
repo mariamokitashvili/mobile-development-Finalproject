@@ -1,8 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as ImagePicker from "expo-image-picker";
+import { useRouter } from "expo-router"; // ნავიგაციისთვის
 import React, { useEffect, useState } from "react";
 import {
+  Alert,
   Image,
   SafeAreaView,
   ScrollView,
@@ -14,6 +16,7 @@ import {
 } from "react-native";
 
 export default function Profile() {
+  const router = useRouter(); // როუტერის ინიციალიზაცია
   const [isEditing, setIsEditing] = useState(false);
   const [user, setUser] = useState({
     name: "Mariam",
@@ -35,12 +38,29 @@ export default function Profile() {
   const saveProfile = async () => {
     await AsyncStorage.setItem("user_profile", JSON.stringify(user));
     setIsEditing(false);
-    alert("Profile Updated!");
+    Alert.alert("Success", "Profile Updated!");
+  };
+
+  // ლოგაუთის ფუნქცია
+  const handleLogout = async () => {
+    Alert.alert("Logout", "Are you sure you want to exit?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Logout",
+        style: "destructive",
+        onPress: async () => {
+          // წავშალოთ იუზერის ინფო და გადავიყვანოთ ლოგინზე
+          await AsyncStorage.removeItem("user_profile");
+          router.replace("/login");
+        },
+      },
+    ]);
   };
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== "granted") return alert("Need access!");
+    if (status !== "granted")
+      return Alert.alert("Error", "Need access to gallery!");
 
     let result = await ImagePicker.launchImageLibraryAsync({
       allowsEditing: true,
@@ -93,6 +113,7 @@ export default function Profile() {
           />
         </View>
 
+        {/* Edit / Save ღილაკი */}
         <TouchableOpacity
           style={[
             styles.mainBtn,
@@ -103,6 +124,20 @@ export default function Profile() {
           <Text style={styles.btnText}>
             {isEditing ? "SAVE INFO" : "EDIT PROFILE"}
           </Text>
+        </TouchableOpacity>
+
+        {/* Logout ღილაკი */}
+        <TouchableOpacity
+          style={[styles.mainBtn, styles.logoutBtn]}
+          onPress={handleLogout}
+        >
+          <Ionicons
+            name="log-out-outline"
+            size={20}
+            color="#FFF"
+            style={{ marginRight: 10 }}
+          />
+          <Text style={styles.btnText}>LOGOUT</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
@@ -164,6 +199,12 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     alignItems: "center",
     marginTop: 20,
+    flexDirection: "row",
+    justifyContent: "center",
+  },
+  logoutBtn: {
+    backgroundColor: "#FF3B30", // წითელი ფერი გამოსვლისთვის
+    marginTop: 12,
   },
   btnText: { color: "#FFF", fontWeight: "bold", letterSpacing: 1 },
 });

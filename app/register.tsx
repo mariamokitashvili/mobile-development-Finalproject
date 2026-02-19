@@ -1,8 +1,10 @@
 import { yupResolver } from "@hookform/resolvers/yup";
+import AsyncStorage from "@react-native-async-storage/async-storage"; // დავამატეთ ეს
 import { useRouter } from "expo-router";
 import React from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
+  Alert,
   ScrollView,
   StyleSheet,
   Text,
@@ -15,7 +17,6 @@ import { registerSchema } from "./schemas/authSchema";
 export default function Register() {
   const router = useRouter();
 
-  // რეგისტრაციის ფორმის კონტროლი
   const {
     control,
     handleSubmit,
@@ -29,10 +30,29 @@ export default function Register() {
     },
   });
 
-  const onSubmit = (data: any) => {
-    console.log("New User Registered:", data);
-    // წარმატების მერე ვაბრუნებთ ლოგინზე
-    router.push("/login");
+  // ფუნქცია, რომელიც ინახავს ინფოს და გადაგვიყვანს პროფილზე
+  const onSubmit = async (data: any) => {
+    try {
+      // ვქმნით იუზერის ობიექტს
+      const userProfile = {
+        email: data.email,
+        name: data.email.split("@")[0], // მეილის პირველ ნაწილს ვიყენებთ სახელად
+        phone: "Not set",
+        image: null,
+      };
+
+      // ვინახავთ AsyncStorage-ში
+      await AsyncStorage.setItem("user_profile", JSON.stringify(userProfile));
+
+      console.log("New User Registered and Saved:", userProfile);
+
+      Alert.alert("Success", "Account created successfully!");
+
+      // პირდაპირ ტაბებში გადავიყვანოთ, რომ პროფილი უკვე შევსებული დახვდეს
+      router.replace("/(tabs)");
+    } catch (error) {
+      Alert.alert("Error", "Could not save profile");
+    }
   };
 
   return (
@@ -114,22 +134,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 30,
     paddingVertical: 50,
   },
-  header: {
-    marginBottom: 40,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: "bold",
-    color: "#1A237E",
-  },
-  subtitle: {
-    fontSize: 16,
-    color: "#666",
-    marginTop: 5,
-  },
-  form: {
-    width: "100%",
-  },
+  header: { marginBottom: 40 },
+  title: { fontSize: 32, fontWeight: "bold", color: "#1A237E" },
+  subtitle: { fontSize: 16, color: "#666", marginTop: 5 },
+  form: { width: "100%" },
   regBtn: {
     backgroundColor: "#C5A358",
     height: 58,
@@ -149,16 +157,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     letterSpacing: 1,
   },
-  backBtn: {
-    marginTop: 30,
-    alignItems: "center",
-  },
-  backText: {
-    color: "#777",
-    fontSize: 15,
-  },
-  loginLink: {
-    color: "#1A237E",
-    fontWeight: "bold",
-  },
+  backBtn: { marginTop: 30, alignItems: "center" },
+  backText: { color: "#777", fontSize: 15 },
+  loginLink: { color: "#1A237E", fontWeight: "bold" },
 });

@@ -4,6 +4,7 @@ import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
+  Alert,
   ScrollView,
   StyleSheet,
   Switch,
@@ -16,42 +17,64 @@ import { loginSchema } from "./schemas/authSchema";
 
 export default function Login() {
   const router = useRouter();
-
-  // ამით ვაკონტროლებ Remember Me ჩამრთველის სტატუსს
   const [rememberMe, setRememberMe] = useState(false);
 
-  // ფორმის მართვა hook-form-ს ვაძლევთ ჩვენს yup სქემას ვალიდაციისთვის
   const {
     control,
     handleSubmit,
     setValue,
+    getValues, // მეილის ამოსაღებად Forgot-ის დროს
     formState: { errors },
   } = useForm({
     resolver: yupResolver(loginSchema),
     defaultValues: { email: "", password: "" },
   });
 
-  // როცა გვერდი იხსნება, ვამოწმებ AsyncStorage-ში თუ არის  დამახსოვრებული მეილი
   useEffect(() => {
     const checkSavedEmail = async () => {
       const savedEmail = await AsyncStorage.getItem("user_email");
       if (savedEmail) {
-        setValue("email", savedEmail); // ავტომატურად ვავსებ ინფუტს
+        setValue("email", savedEmail);
         setRememberMe(true);
       }
     };
     checkSavedEmail();
   }, [setValue]);
 
-  // ფორმის დასაბამითება
+  // Forgot Password ფუნქცია
+  const handleForgotPassword = () => {
+    const email = getValues("email");
+    if (!email || !email.includes("@")) {
+      Alert.alert("Error", "Please enter your email address first.");
+      return;
+    }
+
+    Alert.alert(
+      "Reset Password",
+      `Instructions to reset your password have been sent to: ${email}`,
+      [{ text: "OK" }],
+    );
+  };
+
   const onSubmit = async (data: any) => {
+    // ვინახავთ მეილს Remember Me-სთვის
     if (rememberMe) {
       await AsyncStorage.setItem("user_email", data.email);
     } else {
       await AsyncStorage.removeItem("user_email");
     }
 
-    console.log("Logged in with:", data);
+    // ვინახავთ იუზერის ობიექტს პროფილისთვის
+    const userProfile = {
+      email: data.email,
+      name: data.email.split("@")[0], // სახელი მეილიდან
+      phone: "Not set",
+      image: null,
+    };
+
+    await AsyncStorage.setItem("user_profile", JSON.stringify(userProfile));
+
+    console.log("Logged in successfully");
     router.replace("/(tabs)" as any);
   };
 
@@ -59,7 +82,7 @@ export default function Login() {
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.headerBox}>
         <Text style={styles.welcomeTitle}>Welcome Back</Text>
-        <Text style={styles.subTitle}>Sign in to your premium account</Text>
+        <Text style={styles.subTitle}>Sign in to your account</Text>
       </View>
 
       <View style={styles.formContainer}>
@@ -102,7 +125,7 @@ export default function Login() {
             />
             <Text style={styles.rememberText}>Remember Me</Text>
           </View>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={handleForgotPassword}>
             <Text style={styles.forgotBtn}>Forgot?</Text>
           </TouchableOpacity>
         </View>
@@ -117,7 +140,7 @@ export default function Login() {
 
       <View style={styles.footer}>
         <Text style={styles.footerText}>New member? </Text>
-        <TouchableOpacity onPress={() => router.push("/register")}>
+        <TouchableOpacity onPress={() => router.push("/register" as any)}>
           <Text style={styles.signUpLink}>Create Account</Text>
         </TouchableOpacity>
       </View>
@@ -132,40 +155,22 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingHorizontal: 30,
   },
-  headerBox: {
-    marginBottom: 40,
-  },
-  welcomeTitle: {
-    fontSize: 32,
-    fontWeight: "bold",
-    color: "#1A237E",
-  },
-  subTitle: {
-    fontSize: 16,
-    color: "#666",
-    marginTop: 5,
-  },
-  formContainer: {
-    width: "100%",
-  },
+  headerBox: { marginBottom: 40 },
+  welcomeTitle: { fontSize: 32, fontWeight: "bold", color: "#1A237E" },
+  subTitle: { fontSize: 16, color: "#666", marginTop: 5 },
+  formContainer: { width: "100%" },
   rememberRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 25,
   },
-  switchBox: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  rememberText: {
-    marginLeft: 8,
-    color: "#444",
-    fontSize: 14,
-  },
+  switchBox: { flexDirection: "row", alignItems: "center" },
+  rememberText: { marginLeft: 8, color: "#444", fontSize: 14 },
   forgotBtn: {
     color: "#C5A358",
-    fontWeight: "600",
+    fontWeight: "700",
+    textDecorationLine: "underline",
   },
   loginBtn: {
     backgroundColor: "#1A237E",
@@ -185,16 +190,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     letterSpacing: 1,
   },
-  footer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    marginTop: 35,
-  },
-  footerText: {
-    color: "#777",
-  },
-  signUpLink: {
-    color: "#1A237E",
-    fontWeight: "bold",
-  },
+  footer: { flexDirection: "row", justifyContent: "center", marginTop: 35 },
+  footerText: { color: "#777" },
+  signUpLink: { color: "#1A237E", fontWeight: "bold" },
 });
